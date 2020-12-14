@@ -1,5 +1,6 @@
 from traitlets import Bool, Float, observe, Any, Int
 import astropy.units as u
+from astropy.constants import c
 from specutils import SpectralAxis
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
 
@@ -38,6 +39,21 @@ class RedshiftSlider(TemplateMixin):
             label = msg.data.label
             temp_data = msg.viewer_id
 
+    def _velocity_to_redshift(self, velocity):
+        """
+        Convert a velocity to a relativistic redshift.
+        """
+        beta = velocity / c
+        return np.sqrt((1 + beta) / (1 - beta)) - 1
+
+
+    def _redshift_to_velocity(self, redshift):
+        """
+        Convert a relativistic redshift to a velocity.
+        """
+        zponesq = (1 + redshift) ** 2
+        return c * (zponesq - 1) / (zponesq + 1)
+
     def _propagate_redshift(self):
         """
         When the redshift is changed with the slider, send the new value to
@@ -51,8 +67,12 @@ class RedshiftSlider(TemplateMixin):
 
         for data_item in self.app.data_collection:
             if type(data_item.coords.spectral_axis) == SpectralAxis:
-                new_axis = SpectralAxis(data_item.coords.spectral_axis,
-                                                 redshift = self.slider)
+                if self.slider_type == "Redshift":
+                    new_axis = SpectralAxis(data_item.coords.spectral_axis,
+                                            redshift = self.slider)
+                else:
+                    new_axis = SpectralAxis(data_item.coords.spectral_axis,
+                                            radial_velocity = self.slider)
                 data_item.coords = SpectralCoordinates(new_axis)
             #if "redshift" in data_item.meta:
             #    data_item.meta["redshift"] = self.slider
@@ -69,3 +89,10 @@ class RedshiftSlider(TemplateMixin):
         else:
             value = event['new']
         self._propagate_redshift()
+
+    @observe('slider_type')
+    def _on_type_updated(self, event):
+        if event['new'] == "Redshift":
+            self.slider = self._velocity_to_redshift(self.slider)
+        else:
+            self.slider = self._redshift_to_velocity(self.slider).to('km/s')
