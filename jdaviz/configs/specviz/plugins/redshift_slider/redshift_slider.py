@@ -37,7 +37,11 @@ class RedshiftSlider(TemplateMixin):
         if isinstance(msg.viewer, BqplotProfileView):
             print(msg.data.get_object())
             label = msg.data.label
-            temp_data = msg.viewer_id
+            temp_data = self.app.get_data_from_viewer("spectrum-viewer")[label]
+            if self.slider_type == "Redshift":\
+                self.slider = temp_data.redshift.value
+            else:
+                self.slider = temp_data.radial_velocity.to("km/s").value
 
     def _velocity_to_redshift(self, velocity):
         """
