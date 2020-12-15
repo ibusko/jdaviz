@@ -3,6 +3,7 @@ import astropy.units as u
 from astropy.constants import c
 from specutils import SpectralAxis
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
+import numpy as np
 
 from jdaviz.core.events import AddDataMessage
 from jdaviz.core.registries import tool_registry
@@ -49,7 +50,6 @@ class RedshiftSlider(TemplateMixin):
         """
         beta = velocity / c
         return np.sqrt((1 + beta) / (1 - beta)) - 1
-
 
     def _redshift_to_velocity(self, redshift):
         """
