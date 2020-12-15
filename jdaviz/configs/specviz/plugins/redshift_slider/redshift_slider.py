@@ -21,7 +21,7 @@ class RedshiftSlider(TemplateMixin):
     slider_type = Any("Redshift").tag(sync=True)
     min_value = Float(-1).tag(sync=True)
     max_value = Float(1).tag(sync=True)
-    slider_step = Float(0.01).tag(sync=True)
+    slider_step = Float(0.001).tag(sync=True)
     linked = Bool(True).tag(sync=True)
     wait = Int(100).tag(sync=True)
 
@@ -76,7 +76,7 @@ class RedshiftSlider(TemplateMixin):
                                             redshift = self.slider)
                 else:
                     new_axis = SpectralAxis(data_item.coords.spectral_axis,
-                                            radial_velocity = self.slider)
+                                radial_velocity = u.Quantity(self.slider, "km/s"))
                 data_item.coords = SpectralCoordinates(new_axis)
             #if "redshift" in data_item.meta:
             #    data_item.meta["redshift"] = self.slider
@@ -97,6 +97,14 @@ class RedshiftSlider(TemplateMixin):
     @observe('slider_type')
     def _on_type_updated(self, event):
         if event['new'] == "Redshift":
-            self.slider = self._velocity_to_redshift(self.slider)
+            new_val = self._velocity_to_redshift(u.Quantity(self.slider, "km/s")).value
+            self.min_value = new_val - 1.0
+            self.max_value = new_val + 1.0
+            self.slider_step = 0.001
+            self.slider = new_val
         else:
-            self.slider = self._redshift_to_velocity(self.slider).to('km/s')
+            new_val = self._redshift_to_velocity(self.slider).to('km/s').value
+            self.min_value = new_val - (new_val / 100.0)
+            self.max_value = new_val + (new_val / 100.0)
+            self.slider_step = int(new_val / 10000.0)
+            self.slider = new_val
