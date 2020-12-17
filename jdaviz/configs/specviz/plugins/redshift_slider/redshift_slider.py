@@ -72,7 +72,12 @@ class RedshiftSlider(TemplateMixin):
         """
         line_list = self.app.get_viewer('spectrum-viewer').spectral_lines
         if line_list is not None:
-            line_list["redshift"]= u.Quantity(self.slider)
+            if self.slider_type == "Redshift":
+                line_list["redshift"] = u.Quantity(self.slider)
+            else:
+                z = self._velocity_to_redshift(u.Quantity(self.slider, "km/s"))
+                line_list["redshift"] = z
+                print(z)
             # Replot with the new redshift
             line_list = self.app.get_viewer('spectrum-viewer').plot_spectral_lines()
 
@@ -120,12 +125,22 @@ class RedshiftSlider(TemplateMixin):
 
     def _update_bounds_rv(self, new_val):
         '''Set reasonable slider parameters based on manually set radial velocity'''
-        new_min = new_val - (new_val / 100.0)
-        new_max = new_val + (new_val / 100.0)
+        if new_val >= 0 and new_val < 100000:
+            new_min = 0
+            new_max = new_val + 100000
+            step = 500
+        elif new_val < 0 and new_val > -100000:
+            new_min = new_val-100000
+            new_max = 0
+            step = 500
+        else:
+            new_min = new_val - (new_val / 100.0)
+            new_max = new_val + (new_val / 100.0)
+            step = new_cal / 10000.0
 
         self._set_bounds_orderly(new_min, new_max, new_val)
 
-        self.slider_step = int(new_val / 10000.0)
+        self.slider_step = step
 
     def vue_textbox_change(self, event):
         val = float(event)
