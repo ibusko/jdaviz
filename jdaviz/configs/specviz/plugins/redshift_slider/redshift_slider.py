@@ -176,42 +176,35 @@ class RedshiftSlider(TemplateMixin):
 
         self.slider_step = step
 
-    '''
-    # Note: these are artifacts of an attempt to accept values outside the
-    # range of the slider in the text field and automatically update the slider
-    # range in that case. Turns out to be very difficult to get the slider,
-    # text field, and spin buttons all to interact properly.
-
-    def vue_textbox_change(self, event):
-        val = float(event)
-        if val > self.max_value or val < self.min_value:
-            self._update_bounds[self.slider_type](val)
-        self.slider = val
-        print(val)
-
     @observe('slider_textbox')
     def _on_textbox_change(self, event):
-        print("I saw that: {}".format(event))
-        self.slider = float(event["new"])
-    '''
+        try:
+            val = float(event["new"])
+        except:
+            return
+
+        if val > self.max_value or val < self.min_value:
+            self._update_bounds[self.slider_type](val)
+
+        if self.slider != val:
+            self.slider = val
 
     @observe('slider')
     def _on_slider_updated(self, event):
         if not event['new']:
             value = 0
         else:
-            try:
-                value = float(event['new'])
-            except:
-                # Can't change to non-numbers!
-                return
-
-        if value == self.slider:
-            return
+            value = float(event['new'])
 
         if value > self.max_value or value < self.min_value:
             self._update_bounds[self.slider_type](value)
             self.slider = value
+        else:
+            self.slider = value
+
+        if self.slider != float(self.slider_textbox):
+            self.slider_textbox = self.slider
+
         self._propagate_redshift()
 
     @observe('slider_type')
