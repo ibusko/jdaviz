@@ -200,7 +200,11 @@ class RedshiftSlider(TemplateMixin):
         if not event['new']:
             value = 0
         else:
-            value = float(event['new'])
+            try:
+                value = float(event['new'])
+            except:
+                # Can't change to non-numbers!
+                return
 
         if value == self.slider:
             return
