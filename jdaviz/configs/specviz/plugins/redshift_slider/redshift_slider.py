@@ -180,7 +180,7 @@ class RedshiftSlider(TemplateMixin):
     def _on_textbox_change(self, event):
         try:
             val = float(event["new"])
-        except:
+        except ValueError:
             return
 
         if val > self.max_value or val < self.min_value:
