@@ -96,6 +96,8 @@ class RedshiftSlider(TemplateMixin):
         When the redshift is changed with the slider, send the new value to
         the line list and spectrum viewer data.
         """
+        if self.slider == "" or self.slider == "-":
+            return
         if self.slider_type == "Redshift":
             z = u.Quantity(self.slider)
         else:
@@ -197,6 +199,10 @@ class RedshiftSlider(TemplateMixin):
             value = 0
         else:
             value = float(event['new'])
+
+        if value == self.slider:
+            return
+
         if value > self.max_value or value < self.min_value:
             self._update_bounds[self.slider_type](value)
             self.slider = value
