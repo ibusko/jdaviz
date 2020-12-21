@@ -72,6 +72,8 @@ class RedshiftSlider(TemplateMixin):
             self.min_value = val
         elif param == "slider_max":
             self.max_value = val
+        elif param == "slider_step":
+            self.slider_step = val
         elif param == "redshift":
             if val > self.max_value or val < self.min_value:
                 self._update_bounds[self.slider_type](val)
