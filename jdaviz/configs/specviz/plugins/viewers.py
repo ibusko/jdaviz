@@ -87,6 +87,9 @@ class SpecvizProfileView(BqplotProfileView):
         # Use the redshift of the displayed spectrum if no redshifts are specified
         if "redshift" not in line_table.colnames:
             line_table["redshift"] = self.data()[0].spectral_axis.redshift
+        # Make sure the redshift column is a quantity
+        line_table["redshift"] = u.Quantity(line_table["redshift"])
+
 
         # Set all of the lines to be shown on the plot by default on load
         line_table["show"] = True
@@ -160,9 +163,14 @@ class SpecvizProfileView(BqplotProfileView):
                 self.spectral_lines["show"] = False
         else:
             temp_marks = []
-            # Toggle "show" value in main astropy table
+            # Toggle "show" value in main astropy table. The astropy table
+            # machinery only allows updating a single row at a time.
             if name_rest is not None:
-                self.spectral_lines.loc[name_rest]["show"] = False
+                if type(name_rest) == str:
+                    self.spectral_lines.loc[name_rest]["show"] = False
+                elif type(name_rest) == list:
+                    for nr in name_rest:
+                        self.spectral_lines.loc[nr]["show"] = False
             # Get rid of the marks we no longer want
             for x in fig.marks:
                 if type(x) == SpectralLine:
@@ -171,7 +179,6 @@ class SpecvizProfileView(BqplotProfileView):
                         if x.name == name:
                             continue
                     else:
-                        self.spectral_lines.loc[name_rest]["show"] = False
                         if type(name_rest) == str:
                             if x.table_index == name_rest:
                                 continue
